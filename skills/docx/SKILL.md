@@ -77,6 +77,65 @@ After creating the file, validate it. If validation fails, unpack, fix the XML, 
 python scripts/office/validate.py doc.docx
 ```
 
+### Embedding text content (two-phase pattern)
+
+For any document longer than a few paragraphs, **separate content from code**:
+
+1. Write the prose to a data file (`content.json` or `content.md`) first.
+2. Keep the generator script (`build_doc.js`) small — it loads the data and maps it to `Paragraph`/`TextRun`.
+
+Why: research text almost always contains `"quoted phrases"`, apostrophes (`it's`), backticks, and `${placeholders}`. Pasting raw prose inside a JS `"..."`, `'...'`, or `` `...` `` literal is fragile — one unescaped character terminates the string and produces a `SyntaxError`. Data files avoid this entirely (JSON handles escaping; `.txt` needs none).
+
+```javascript
+// content.json — quotes are JSON-escaped, no JS string-literal rules apply
+{
+  "intro": "Munich — München, derived from the Old High German Munichen (\"by the monks\") — is a brewing city.",
+  "sections": [
+    { "heading": "History", "paragraphs": ["...", "..."] }
+  ]
+}
+
+// build_doc.js — stays short, data-agnostic, easy to re-emit on error
+const fs = require("fs");
+const { Document, Packer, Paragraph, TextRun, HeadingLevel } = require("docx");
+const data = JSON.parse(fs.readFileSync("content.json", "utf8"));
+
+const body = [
+  new Paragraph({ children: [new TextRun(data.intro)] }),
+  ...data.sections.flatMap(s => [
+    new Paragraph({ heading: HeadingLevel.HEADING_1, children: [new TextRun(s.heading)] }),
+    ...s.paragraphs.map(p => new Paragraph({ children: [new TextRun(p)] })),
+  ]),
+];
+
+const doc = new Document({ sections: [{ children: body }] });
+Packer.toBuffer(doc).then(b => fs.writeFileSync("doc.docx", b));
+```
+
+**If you must inline a short string in JS**, use `JSON.stringify()` or a backtick literal with escaped backticks — never paste raw prose into `"..."` or `'...'`.
+
+### Pre-flight syntax check
+
+Before running the generator, verify it parses:
+
+```bash
+node --check build_doc.js
+```
+
+`node --check` is fast and localizes the error to `line:col`. Run it after every `write_file` and before every `node build_doc.js`.
+
+### Repair after SyntaxError
+
+When `node --check` or `node build_doc.js` reports a `SyntaxError`:
+
+1. **Read the offending line with 5 lines of context on each side** — the error location is accurate, the cause usually is not.
+2. **Diagnose before editing.** Common causes (in order of frequency):
+   - Unescaped ASCII `"` or `'` inside a string literal (research prose pasted raw).
+   - A `${...}` inside a backtick literal that was meant to be literal text.
+   - A missing comma between array/object entries.
+3. **Fix at source.** If the cause is embedded prose, move that content into `content.json` instead of trying to escape in place.
+4. **Do not blind-replace with `sed`.** In particular, `sed`'ing curly quotes (`U+201C`/`U+201D`/`U+2018`/`U+2019`) will not fix a string-literal error caused by ASCII `"` or `'` — those are different characters. Running the same `sed` twice and expecting a different outcome wastes turns.
+
 ### Page Size
 
 ```javascript
@@ -377,6 +436,9 @@ sections: [{
 
 ### Critical Rules for docx-js
 
+- **Separate content from code** - put prose in `content.json` and have `build_doc.js` load it; never paste raw prose into JS string literals (inner `"` or `'` will break the literal)
+- **Run `node --check build_doc.js` before executing** - catches SyntaxError at `line:col` without running the script
+- **On SyntaxError, read the offending line ±5 first** - diagnose before editing; do not blind-`sed` quote replacements
 - **Set page size explicitly** - docx-js defaults to A4; use US Letter (12240 x 15840 DXA) for US documents
 - **Landscape: pass portrait dimensions** - docx-js swaps width/height internally; pass short edge as `width`, long edge as `height`, and set `orientation: PageOrientation.LANDSCAPE`
 - **Never use `\n`** - use separate Paragraph elements
