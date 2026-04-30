@@ -91,7 +91,7 @@ def _infer_encoding(rows: list[dict[str, Any]], columns: list[str], chart_type: 
     categorical = [column for column in columns if column not in numeric]
     if analysis_type == "relationship" and len(numeric) >= 2:
         return {"x": numeric[0], "y": numeric[1]}
-    if chart_type in {"graph", "sankey", "lines"}:
+    if chart_type in {"graph", "sankey", "chord", "lines"}:
         return {
             "source": _column_named(columns, "source", "from") or columns[0],
             "target": _column_named(columns, "target", "to") or (columns[1] if len(columns) > 1 else columns[0]),
