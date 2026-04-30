@@ -39,7 +39,30 @@
           "type": { "enum": ["metric", "chart", "table", "textInsight", "sql", "dataQuality", "relationshipMap", "filterControl"] },
           "dataset": { "type": "string" },
           "title": { "type": "string" },
-          "chart": { "type": ["string", "object"] },
+          "chart": {
+            "oneOf": [
+              { "$ref": "#/$defs/chartType" },
+              {
+                "type": "object",
+                "required": ["type"],
+                "additionalProperties": true,
+                "properties": {
+                  "type": { "$ref": "#/$defs/chartType" },
+                  "encoding": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "oneOf": [
+                        { "type": "string" },
+                        { "type": "array", "items": { "type": "string" } }
+                      ]
+                    }
+                  },
+                  "variant": { "type": "string" },
+                  "option": { "type": "object", "additionalProperties": true }
+                }
+              }
+            ]
+          },
           "interactions": { "type": "array", "items": { "$ref": "#/$defs/interaction" } }
         }
       }
@@ -50,6 +73,32 @@
     "provenance": { "type": "object", "additionalProperties": true }
   },
   "$defs": {
+    "chartType": {
+      "enum": [
+        "line",
+        "area",
+        "bar",
+        "pie",
+        "scatter",
+        "effectScatter",
+        "heatmap",
+        "treemap",
+        "sunburst",
+        "sankey",
+        "graph",
+        "tree",
+        "boxplot",
+        "candlestick",
+        "radar",
+        "funnel",
+        "gauge",
+        "pictorialBar",
+        "parallel",
+        "lines",
+        "map",
+        "themeRiver"
+      ]
+    },
     "interaction": {
       "type": "object",
       "required": ["type"],

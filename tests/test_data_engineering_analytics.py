@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 
 SKILL_DIR = Path(__file__).resolve().parents[1] / "skills" / "data-engineering-analytics"
@@ -88,3 +89,62 @@ def test_dashboard_spec_validation_rejects_executable_content() -> None:
         assert "forbidden" in str(exc)
     else:  # pragma: no cover - assertion branch
         raise AssertionError("dashboard spec should reject executable content")
+
+
+def test_dashboard_capabilities_are_reflected_in_json_schema() -> None:
+    capabilities = json.loads((SKILL_DIR / "capabilities" / "data_engineering_dashboard_capabilities.json").read_text(encoding="utf-8"))
+    schema = json.loads((SKILL_DIR / "schemas" / "dashboard_spec.schema.json").read_text(encoding="utf-8"))
+    assert set(schema["$defs"]["chartType"]["enum"]) == set(capabilities["chartTypes"])
+    assert "custom" in capabilities["unsupportedChartTypes"]
+    assert "custom" not in capabilities["chartTypes"]
+
+
+def test_dashboard_spec_validation_accepts_all_supported_chart_types() -> None:
+    validator = load_script("validate_dashboard_spec.py")
+    capabilities = json.loads((SKILL_DIR / "capabilities" / "data_engineering_dashboard_capabilities.json").read_text(encoding="utf-8"))
+    for chart_type, capability in capabilities["chartTypes"].items():
+        encoding = {key: key for key in capability["requiredEncodings"]}
+        rows = [{key: index + 1 for index, key in enumerate(encoding)}]
+        if "x" in encoding:
+            rows[0]["x"] = "A"
+        if "source" in encoding:
+            rows[0]["source"] = "A"
+            rows[0]["target"] = "B"
+        if "dimensions" in encoding:
+            encoding["dimensions"] = ["a", "b"]
+            rows = [{"a": 1, "b": 2}]
+        spec = {
+            "schemaVersion": "1.0",
+            "title": chart_type,
+            "question": f"Can {chart_type} render?",
+            "analysisType": "comparison",
+            "datasets": [{"id": "result", "columns": list(rows[0]), "rows": rows}],
+            "blocks": [{"id": "chart", "type": "chart", "dataset": "result", "chart": {"type": chart_type, "encoding": encoding}}],
+            "interactions": [],
+            "queries": [],
+            "insights": [],
+            "provenance": {},
+        }
+        assert validator.validate(spec) == spec
+
+
+def test_dashboard_spec_validation_rejects_unknown_chart_type() -> None:
+    validator = load_script("validate_dashboard_spec.py")
+    spec = {
+        "schemaVersion": "1.0",
+        "title": "Bad",
+        "question": "Can this render?",
+        "analysisType": "comparison",
+        "datasets": [{"id": "result", "columns": ["x", "y"], "rows": [{"x": "A", "y": 1}]}],
+        "blocks": [{"id": "chart", "type": "chart", "dataset": "result", "chart": {"type": "custom", "encoding": {"x": "x", "y": "y"}}}],
+        "interactions": [],
+        "queries": [],
+        "insights": [],
+        "provenance": {},
+    }
+    try:
+        validator.validate(spec)
+    except ValueError as exc:
+        assert "unsupported chart type" in str(exc)
+    else:  # pragma: no cover - assertion branch
+        raise AssertionError("dashboard spec should reject unknown chart types")

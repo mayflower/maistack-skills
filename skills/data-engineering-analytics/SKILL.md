@@ -23,6 +23,7 @@ Use this skill whenever the user asks to inspect, explain, analyze, profile, qua
 - Do not assume table names, schemas, measures, joins, or date columns. Infer them from metadata and query samples.
 - Use `data_engineering_show_dashboard` for interactive dashboards. Use `visualize_show_widget` only as a fallback for one-off custom HTML widgets.
 - Dashboard specs must be JSON data only. Do not put HTML, JavaScript, event handler names, scripts, or executable code in the spec.
+- Choose chart types only from `capabilities/data_engineering_dashboard_capabilities.json`. Do not invent ECharts chart types or use unsupported custom renderers.
 
 ## Workflow
 
@@ -71,6 +72,7 @@ The skill chooses the number and type of blocks from the question and data shape
 
 Use the references:
 
+- `capabilities/data_engineering_dashboard_capabilities.json` for the exact chart types, required encodings, variants, and supported interactions implemented by the widget.
 - `references/dashboard_strategy.md` for communication strategy.
 - `references/chart_selection.md` for chart selection rules.
 - `references/examples/adventureworks_dw.md` only as optional demo guidance.
@@ -82,3 +84,5 @@ The dashboard spec supports these block types: `metric`, `chart`, `table`, `text
 The dashboard spec supports these interactions: `crossFilter`, `drilldown`, `brush`, `highlight`, `compare`, `reset`.
 
 The frontend owns ECharts rendering and event handling. The skill declares intent, data, encodings, joins, assumptions, and warnings. It does not emit JavaScript.
+
+Every chart block must declare `chart.type` and, for specialized charts, the required `chart.encoding` fields from the capability manifest. Basic `x`/`y` encodings may be inferred from result columns, but explicit encodings are preferred for all production dashboard specs.
