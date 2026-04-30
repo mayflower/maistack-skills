@@ -1,0 +1,172 @@
+{
+    "schemaVersion": "1.0",
+    "echartsMajorVersion": 6,
+    "description": "Chart capabilities supported by the data engineering dashboard widget. The skill, backend validator, and frontend renderer must stay aligned with this manifest.",
+    "chartTypes": {
+        "line": {
+            "seriesType": "line",
+            "requiredEncodings": ["x", "y"],
+            "optionalEncodings": ["series"],
+            "builder": "cartesian",
+            "interactions": ["crossFilter", "drilldown", "brush", "highlight", "compare", "reset"]
+        },
+        "area": {
+            "seriesType": "line",
+            "requiredEncodings": ["x", "y"],
+            "optionalEncodings": ["series"],
+            "builder": "cartesian",
+            "variant": "area",
+            "interactions": ["crossFilter", "drilldown", "brush", "highlight", "compare", "reset"]
+        },
+        "bar": {
+            "seriesType": "bar",
+            "requiredEncodings": ["x", "y"],
+            "optionalEncodings": ["series"],
+            "builder": "cartesian",
+            "variants": ["horizontal", "stacked", "waterfall", "histogram"],
+            "interactions": ["crossFilter", "drilldown", "brush", "highlight", "compare", "reset"]
+        },
+        "pie": {
+            "seriesType": "pie",
+            "requiredEncodings": ["x", "y"],
+            "optionalEncodings": [],
+            "builder": "proportional",
+            "variants": ["donut", "rose"],
+            "interactions": ["crossFilter", "drilldown", "highlight", "compare", "reset"]
+        },
+        "scatter": {
+            "seriesType": "scatter",
+            "requiredEncodings": ["x", "y"],
+            "optionalEncodings": ["size", "series"],
+            "builder": "cartesian",
+            "variants": ["bubble"],
+            "interactions": ["crossFilter", "brush", "highlight", "compare", "reset"]
+        },
+        "effectScatter": {
+            "seriesType": "effectScatter",
+            "requiredEncodings": ["x", "y"],
+            "optionalEncodings": ["size", "series"],
+            "builder": "cartesian",
+            "interactions": ["crossFilter", "brush", "highlight", "compare", "reset"]
+        },
+        "heatmap": {
+            "seriesType": "heatmap",
+            "requiredEncodings": ["x", "y", "value"],
+            "optionalEncodings": [],
+            "builder": "heatmap",
+            "interactions": ["crossFilter", "brush", "highlight", "reset"]
+        },
+        "treemap": {
+            "seriesType": "treemap",
+            "requiredEncodings": ["x", "y"],
+            "optionalEncodings": ["parent"],
+            "builder": "hierarchy",
+            "interactions": ["drilldown", "highlight", "reset"]
+        },
+        "sunburst": {
+            "seriesType": "sunburst",
+            "requiredEncodings": ["x", "y"],
+            "optionalEncodings": ["parent"],
+            "builder": "hierarchy",
+            "interactions": ["drilldown", "highlight", "reset"]
+        },
+        "sankey": {
+            "seriesType": "sankey",
+            "requiredEncodings": ["source", "target", "value"],
+            "optionalEncodings": [],
+            "builder": "network",
+            "interactions": ["highlight", "drilldown", "reset"]
+        },
+        "graph": {
+            "seriesType": "graph",
+            "requiredEncodings": ["source", "target"],
+            "optionalEncodings": ["value"],
+            "builder": "network",
+            "interactions": ["highlight", "drilldown", "reset"]
+        },
+        "tree": {
+            "seriesType": "tree",
+            "requiredEncodings": ["x"],
+            "optionalEncodings": ["parent", "y"],
+            "builder": "hierarchy",
+            "interactions": ["drilldown", "highlight", "reset"]
+        },
+        "boxplot": {
+            "seriesType": "boxplot",
+            "requiredEncodings": ["x", "min", "q1", "median", "q3", "max"],
+            "optionalEncodings": [],
+            "builder": "statistical",
+            "interactions": ["brush", "highlight", "compare", "reset"]
+        },
+        "candlestick": {
+            "seriesType": "candlestick",
+            "requiredEncodings": ["x", "open", "close", "low", "high"],
+            "optionalEncodings": [],
+            "builder": "statistical",
+            "interactions": ["brush", "highlight", "compare", "reset"]
+        },
+        "radar": {
+            "seriesType": "radar",
+            "requiredEncodings": ["x"],
+            "optionalEncodings": ["metrics"],
+            "builder": "radar",
+            "interactions": ["highlight", "compare", "reset"]
+        },
+        "funnel": {
+            "seriesType": "funnel",
+            "requiredEncodings": ["x", "y"],
+            "optionalEncodings": [],
+            "builder": "proportional",
+            "interactions": ["crossFilter", "highlight", "compare", "reset"]
+        },
+        "gauge": {
+            "seriesType": "gauge",
+            "requiredEncodings": ["y"],
+            "optionalEncodings": ["x"],
+            "builder": "gauge",
+            "interactions": ["highlight", "reset"]
+        },
+        "pictorialBar": {
+            "seriesType": "pictorialBar",
+            "requiredEncodings": ["x", "y"],
+            "optionalEncodings": ["series"],
+            "builder": "cartesian",
+            "interactions": ["crossFilter", "drilldown", "highlight", "compare", "reset"]
+        },
+        "parallel": {
+            "seriesType": "parallel",
+            "requiredEncodings": ["dimensions"],
+            "optionalEncodings": [],
+            "builder": "parallel",
+            "interactions": ["brush", "highlight", "compare", "reset"]
+        },
+        "lines": {
+            "seriesType": "lines",
+            "requiredEncodings": ["source", "target"],
+            "optionalEncodings": ["value"],
+            "builder": "network",
+            "interactions": ["highlight", "reset"]
+        },
+        "map": {
+            "seriesType": "map",
+            "requiredEncodings": ["x", "y"],
+            "optionalEncodings": ["map"],
+            "builder": "map",
+            "requires": ["registeredMap"],
+            "interactions": ["crossFilter", "highlight", "compare", "reset"]
+        },
+        "themeRiver": {
+            "seriesType": "themeRiver",
+            "requiredEncodings": ["x", "y", "series"],
+            "optionalEncodings": [],
+            "builder": "themeRiver",
+            "interactions": ["brush", "highlight", "compare", "reset"]
+        }
+    },
+    "unsupportedChartTypes": {
+        "custom": {
+            "seriesType": "custom",
+            "reason": "ECharts custom series require executable renderItem code, which dashboard specs must not contain."
+        }
+    }
+}

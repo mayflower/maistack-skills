@@ -2,6 +2,8 @@
 
 Classify the question first, then use the shape of the result set.
 
+Use `../capabilities/data_engineering_dashboard_capabilities.json` as the source of truth for chart types, variants, required encodings, and supported interactions. Do not emit chart types outside that file. `custom` ECharts series are intentionally unsupported because they require executable `renderItem` code.
+
 ## Request Classes
 
 - Trend: how a metric changes over time.
@@ -25,6 +27,12 @@ Classify the question first, then use the shape of the result set.
 - hierarchy: treemap or sunburst.
 - flow or multi-step contribution: sankey.
 - schema relationships: graph.
+- financial open/high/low/close: candlestick.
+- five-number summary by group: boxplot.
+- multi-metric entity profile: radar.
+- pipeline or stage conversion: funnel.
+- single KPI against target: gauge.
+- geospatial region values: map only when a registered map is available.
 
 ## Interaction Rules
 

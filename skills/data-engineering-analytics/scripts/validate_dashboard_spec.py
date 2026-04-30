@@ -11,6 +11,9 @@ from typing import Any
 
 BLOCK_TYPES = {"metric", "chart", "table", "textInsight", "sql", "dataQuality", "relationshipMap", "filterControl"}
 INTERACTION_TYPES = {"crossFilter", "drilldown", "brush", "highlight", "compare", "reset"}
+CAPABILITIES_PATH = Path(__file__).resolve().parents[1] / "capabilities" / "data_engineering_dashboard_capabilities.json"
+CHART_CAPABILITIES = json.loads(CAPABILITIES_PATH.read_text(encoding="utf-8"))["chartTypes"]
+INFERABLE_ENCODINGS = {"x", "y"}
 FORBIDDEN_KEYS = {
     "dangerouslySetInnerHTML",
     "html",
@@ -75,6 +78,8 @@ def validate(spec: dict[str, Any]) -> dict[str, Any]:
         dataset = block.get("dataset")
         if dataset and dataset not in dataset_ids:
             _fail(f"block {block_id} references unknown dataset {dataset}")
+        if block.get("type") == "chart":
+            _validate_chart(block)
         for interaction in block.get("interactions", []):
             _validate_interaction(interaction, block_ids=None)
 
@@ -83,6 +88,39 @@ def validate(spec: dict[str, Any]) -> dict[str, Any]:
 
     _scan(spec)
     return spec
+
+
+def _chart_type(chart: Any) -> str | None:
+    if isinstance(chart, str):
+        return chart
+    if isinstance(chart, dict) and isinstance(chart.get("type"), str):
+        return chart["type"]
+    return None
+
+
+def _chart_encoding(chart: Any) -> dict[str, Any]:
+    if not isinstance(chart, dict):
+        return {}
+    encoding = chart.get("encoding")
+    return encoding if isinstance(encoding, dict) else {}
+
+
+def _validate_chart(block: dict[str, Any]) -> None:
+    chart_type = _chart_type(block.get("chart"))
+    if not chart_type:
+        _fail(f"chart block {block['id']} must declare chart.type")
+    capability = CHART_CAPABILITIES.get(chart_type)
+    if not capability:
+        _fail(f"unsupported chart type: {chart_type}")
+    encoding = _chart_encoding(block.get("chart"))
+    for key, value in encoding.items():
+        if not isinstance(key, str):
+            _fail(f"invalid encoding key in block {block['id']}")
+        if not isinstance(value, str) and not (isinstance(value, list) and all(isinstance(item, str) for item in value)):
+            _fail(f"invalid encoding value in block {block['id']}")
+    missing = sorted(set(capability.get("requiredEncodings", [])) - set(encoding) - INFERABLE_ENCODINGS)
+    if missing:
+        _fail(f"chart block {block['id']} missing required encodings: {', '.join(missing)}")
 
 
 def _validate_interaction(interaction: Any, block_ids: set[str] | None) -> None:
