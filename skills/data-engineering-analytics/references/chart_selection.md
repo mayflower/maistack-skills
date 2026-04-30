@@ -2,7 +2,7 @@
 
 Classify the question first, then use the shape of the result set.
 
-Use `../capabilities/data_engineering_dashboard_capabilities.json` as the source of truth for chart types, variants, required encodings, and supported interactions. Do not emit chart types outside that file. `custom` ECharts series are intentionally unsupported because they require executable `renderItem` code.
+Use `../capabilities/data_engineering_dashboard_capabilities.json` as the source of truth for chart types, variants, required encodings, and supported interactions. Do not emit chart types outside that file. `custom` ECharts series are intentionally unsupported in dashboard specs because specs must not serialize executable `renderItem` functions; pre-registered reviewed custom series can be added later as explicit named capabilities.
 
 ## Request Classes
 
@@ -25,7 +25,7 @@ Use `../capabilities/data_engineering_dashboard_capabilities.json` as the source
 - two numeric fields: scatter.
 - two dimensions + metric: heatmap.
 - hierarchy: treemap or sunburst.
-- flow or multi-step contribution: sankey.
+- flow, circular dependency, or multi-step contribution: sankey or chord. Prefer chord when bidirectional or many-to-many relationships are the main message.
 - schema relationships: graph.
 - financial open/high/low/close: candlestick.
 - five-number summary by group: boxplot.
@@ -33,6 +33,8 @@ Use `../capabilities/data_engineering_dashboard_capabilities.json` as the source
 - pipeline or stage conversion: funnel.
 - single KPI against target: gauge.
 - geospatial region values: map only when a registered map is available.
+- overlapping scatter groups: scatter with the `jitter` or `beeswarm` variant.
+- coordinated nested views: use `coordinateSystem: matrix` only when the dashboard needs a deliberate ECharts 6 matrix coordinate layout.
 
 ## Interaction Rules
 

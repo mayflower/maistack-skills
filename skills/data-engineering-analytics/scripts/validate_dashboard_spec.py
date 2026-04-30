@@ -12,7 +12,9 @@ from typing import Any
 BLOCK_TYPES = {"metric", "chart", "table", "textInsight", "sql", "dataQuality", "relationshipMap", "filterControl"}
 INTERACTION_TYPES = {"crossFilter", "drilldown", "brush", "highlight", "compare", "reset"}
 CAPABILITIES_PATH = Path(__file__).resolve().parents[1] / "capabilities" / "data_engineering_dashboard_capabilities.json"
-CHART_CAPABILITIES = json.loads(CAPABILITIES_PATH.read_text(encoding="utf-8"))["chartTypes"]
+CAPABILITIES = json.loads(CAPABILITIES_PATH.read_text(encoding="utf-8"))
+CHART_CAPABILITIES = CAPABILITIES["chartTypes"]
+COORDINATE_SYSTEMS = set(CAPABILITIES.get("coordinateSystems", {}))
 INFERABLE_ENCODINGS = {"x", "y"}
 FORBIDDEN_KEYS = {
     "dangerouslySetInnerHTML",
@@ -121,6 +123,11 @@ def _validate_chart(block: dict[str, Any]) -> None:
     missing = sorted(set(capability.get("requiredEncodings", [])) - set(encoding) - INFERABLE_ENCODINGS)
     if missing:
         _fail(f"chart block {block['id']} missing required encodings: {', '.join(missing)}")
+    chart = block.get("chart")
+    if isinstance(chart, dict) and "coordinateSystem" in chart:
+        coordinate_system = chart["coordinateSystem"]
+        if not isinstance(coordinate_system, str) or coordinate_system not in COORDINATE_SYSTEMS:
+            _fail(f"unsupported coordinate system: {coordinate_system}")
 
 
 def _validate_interaction(interaction: Any, block_ids: set[str] | None) -> None:

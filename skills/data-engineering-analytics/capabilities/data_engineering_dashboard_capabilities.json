@@ -39,7 +39,8 @@
             "requiredEncodings": ["x", "y"],
             "optionalEncodings": ["size", "series"],
             "builder": "cartesian",
-            "variants": ["bubble"],
+            "variants": ["bubble", "jitter", "beeswarm"],
+            "seriesOptions": ["jitter", "jitterOverlap"],
             "interactions": ["crossFilter", "brush", "highlight", "compare", "reset"]
         },
         "effectScatter": {
@@ -47,6 +48,8 @@
             "requiredEncodings": ["x", "y"],
             "optionalEncodings": ["size", "series"],
             "builder": "cartesian",
+            "variants": ["jitter"],
+            "seriesOptions": ["jitter", "jitterOverlap"],
             "interactions": ["crossFilter", "brush", "highlight", "compare", "reset"]
         },
         "heatmap": {
@@ -72,6 +75,13 @@
         },
         "sankey": {
             "seriesType": "sankey",
+            "requiredEncodings": ["source", "target", "value"],
+            "optionalEncodings": [],
+            "builder": "network",
+            "interactions": ["highlight", "drilldown", "reset"]
+        },
+        "chord": {
+            "seriesType": "chord",
             "requiredEncodings": ["source", "target", "value"],
             "optionalEncodings": [],
             "builder": "network",
@@ -163,10 +173,26 @@
             "interactions": ["brush", "highlight", "compare", "reset"]
         }
     },
+    "coordinateSystems": {
+        "matrix": {
+            "description": "ECharts 6 matrix coordinate system. Chart specs may set chart.coordinateSystem to matrix and provide chart.matrix or chart.option.matrix for dashboard layouts that deliberately use matrix cells.",
+            "compatibleBuilders": [
+                "cartesian",
+                "heatmap",
+                "proportional",
+                "network",
+                "statistical",
+                "radar",
+                "gauge",
+                "parallel",
+                "themeRiver"
+            ]
+        }
+    },
     "unsupportedChartTypes": {
         "custom": {
             "seriesType": "custom",
-            "reason": "ECharts custom series require executable renderItem code, which dashboard specs must not contain."
+            "reason": "Dashboard specs must not serialize executable renderItem functions. Pre-registered reviewed custom series may be added later as explicit named capabilities."
         }
     }
 }

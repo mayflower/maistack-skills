@@ -148,3 +148,36 @@ def test_dashboard_spec_validation_rejects_unknown_chart_type() -> None:
         assert "unsupported chart type" in str(exc)
     else:  # pragma: no cover - assertion branch
         raise AssertionError("dashboard spec should reject unknown chart types")
+
+
+def test_dashboard_spec_validation_rejects_unknown_coordinate_system() -> None:
+    validator = load_script("validate_dashboard_spec.py")
+    spec = {
+        "schemaVersion": "1.0",
+        "title": "Bad",
+        "question": "Can this render?",
+        "analysisType": "comparison",
+        "datasets": [{"id": "result", "columns": ["x", "y"], "rows": [{"x": "A", "y": 1}]}],
+        "blocks": [
+            {
+                "id": "chart",
+                "type": "chart",
+                "dataset": "result",
+                "chart": {
+                    "type": "bar",
+                    "coordinateSystem": "unknown",
+                    "encoding": {"x": "x", "y": "y"},
+                },
+            }
+        ],
+        "interactions": [],
+        "queries": [],
+        "insights": [],
+        "provenance": {},
+    }
+    try:
+        validator.validate(spec)
+    except ValueError as exc:
+        assert "unsupported coordinate system" in str(exc)
+    else:  # pragma: no cover - assertion branch
+        raise AssertionError("dashboard spec should reject unknown coordinate systems")

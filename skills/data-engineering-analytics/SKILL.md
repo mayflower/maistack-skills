@@ -23,7 +23,7 @@ Use this skill whenever the user asks to inspect, explain, analyze, profile, qua
 - Do not assume table names, schemas, measures, joins, or date columns. Infer them from metadata and query samples.
 - Use `data_engineering_show_dashboard` for interactive dashboards. Use `visualize_show_widget` only as a fallback for one-off custom HTML widgets.
 - Dashboard specs must be JSON data only. Do not put HTML, JavaScript, event handler names, scripts, or executable code in the spec.
-- Choose chart types only from `capabilities/data_engineering_dashboard_capabilities.json`. Do not invent ECharts chart types or use unsupported custom renderers.
+- Choose chart types and coordinate systems only from `capabilities/data_engineering_dashboard_capabilities.json`. Do not invent ECharts chart types or use unsupported custom renderers.
 
 ## Workflow
 
