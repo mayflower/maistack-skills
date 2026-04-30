@@ -85,4 +85,6 @@ The dashboard spec supports these interactions: `crossFilter`, `drilldown`, `bru
 
 The frontend owns ECharts rendering and event handling. The skill declares intent, data, encodings, joins, assumptions, and warnings. It does not emit JavaScript.
 
+For interactive exploration, use the capability manifest's `interactiveExploration` section as the contract. The widget supports ECharts `tooltip`, `legend`, `dataZoom`, `brush`, `visualMap`, and `toolbox`; it translates click events to equality filters, brush selections to set filters, data zoom ranges to range filters, and legend selection changes to grouped set filters. Declare interactions when linked blocks should react to selections, and include a `filterControl` block when a dashboard is meant to be explored rather than only read.
+
 Every chart block must declare `chart.type` and, for specialized charts, the required `chart.encoding` fields from the capability manifest. Basic `x`/`y` encodings may be inferred from result columns, but explicit encodings are preferred for all production dashboard specs.

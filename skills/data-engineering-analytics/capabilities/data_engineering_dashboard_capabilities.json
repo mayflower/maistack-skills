@@ -189,6 +189,12 @@
             ]
         }
     },
+    "interactiveExploration": {
+        "components": ["tooltip", "legend", "dataZoom", "brush", "visualMap", "toolbox"],
+        "events": ["click", "brushselected", "dataZoom", "legendselectchanged"],
+        "filterKinds": ["equals", "range", "set"],
+        "description": "The widget links ECharts interactions to dashboard-level filter state. Clicks create equality filters, brush selections create set filters, dataZoom creates range filters, and legend changes create set filters for grouped series."
+    },
     "unsupportedChartTypes": {
         "custom": {
             "seriesType": "custom",
