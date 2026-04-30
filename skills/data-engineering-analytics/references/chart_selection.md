@@ -38,4 +38,15 @@ Use `../capabilities/data_engineering_dashboard_capabilities.json` as the source
 
 ## Interaction Rules
 
-Use `crossFilter` when a selected value should filter linked blocks. Use `drilldown` when the next level of detail is clear from the semantic model. Use `brush` for time ranges or numeric ranges. Use `highlight` for hover or selection emphasis. Use `compare` for side-by-side selected segments. Always provide `reset` when filters or drilldowns are present.
+Use `crossFilter` when a selected value should filter linked blocks. Use `drilldown` when the next level of detail is clear from the semantic model. Use `brush` for time ranges, numeric ranges, or selecting multiple marks. Use `highlight` for hover or selection emphasis. Use `compare` for side-by-side selected segments. Always provide `reset` when filters or drilldowns are present.
+
+The widget implements ECharts exploration components from the capability manifest:
+
+- `tooltip` gives precise values for every chart.
+- `legend` is scrollable for grouped series and `legendselectchanged` becomes a set filter.
+- `dataZoom` is enabled for larger Cartesian datasets and `dataZoom` events become range filters.
+- `brush` is enabled for Cartesian and parallel views and `brushselected` events become set filters.
+- `visualMap` is enabled for scatter, effect scatter, heatmap, and map value encodings.
+- `toolbox` exposes restore, zoom, and brush controls where supported.
+
+Do not put JavaScript event handlers in the spec. Express only interaction intent and encodings; the frontend maps the ECharts events to dashboard state.

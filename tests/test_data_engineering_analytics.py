@@ -97,6 +97,12 @@ def test_dashboard_capabilities_are_reflected_in_json_schema() -> None:
     assert set(schema["$defs"]["chartType"]["enum"]) == set(capabilities["chartTypes"])
     assert "custom" in capabilities["unsupportedChartTypes"]
     assert "custom" not in capabilities["chartTypes"]
+    assert {"tooltip", "legend", "dataZoom", "brush", "visualMap", "toolbox"}.issubset(
+        capabilities["interactiveExploration"]["components"]
+    )
+    assert {"click", "brushselected", "dataZoom", "legendselectchanged"}.issubset(
+        capabilities["interactiveExploration"]["events"]
+    )
 
 
 def test_dashboard_spec_validation_accepts_all_supported_chart_types() -> None:
