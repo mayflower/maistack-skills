@@ -12,7 +12,7 @@ metadata:
 
 # Data Engineering Analytics
 
-Use this skill whenever the user asks to inspect, explain, analyze, profile, quality-check, or visualize data from the connected analytics database. The database is generic. AdventureWorks is only a demo dataset and must never be assumed in executable code.
+Use this skill whenever the user asks to inspect, explain, analyze, profile, quality-check, or visualize data from the connected analytics database. Treat the database as unknown: discover its schema and infer a semantic model from live metadata before choosing tables, columns, joins, or measures. Do not hardcode any particular schema, dataset name, or table layout — the connected database varies by deployment.
 
 ## Operating Contract
 
@@ -75,7 +75,7 @@ Use the references:
 - `capabilities/data_engineering_dashboard_capabilities.json` for the exact chart types, required encodings, variants, and supported interactions implemented by the widget.
 - `references/dashboard_strategy.md` for communication strategy.
 - `references/chart_selection.md` for chart selection rules.
-- `references/examples/adventureworks_dw.md` only as optional demo guidance.
+- `references/examples/` for any dataset-specific writeups that may exist; list the directory and only consult an example if its scope clearly matches the connected database. Treat them as optional context, never as a substitute for the live profile.
 
 ## GenUI Dashboard Rules
 

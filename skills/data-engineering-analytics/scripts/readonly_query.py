@@ -60,13 +60,17 @@ def execute_readonly(sql: str, *, limit: int = 5000, timeout_ms: int = 30000) ->
 
     statement = assert_readonly_sql(sql)
     limit = max(1, min(limit, 100000))
-    timeout_ms = max(1000, min(timeout_ms, 300000))
+    # PostgreSQL doesn't accept parameter placeholders inside SET; the value
+    # must be a literal. The clamp above keeps timeout_ms in [1000, 300000]
+    # and the int() cast strips any non-integer input, so f-string
+    # interpolation is safe here (no user-controlled fragment reaches SQL).
+    timeout_ms = int(max(1000, min(timeout_ms, 300000)))
     wrapped_sql = f"select * from ({statement}) as maistack_readonly_query limit %s"
     dsn = dsn_from_env_file()
     with psycopg.connect(dsn, autocommit=False) as conn:
         with conn.cursor() as cur:
             cur.execute("set transaction read only")
-            cur.execute("set local statement_timeout = %s", (timeout_ms,))
+            cur.execute(f"set local statement_timeout = {timeout_ms}")
             cur.execute(wrapped_sql, (limit,))
             columns = [desc.name for desc in cur.description or []]
             rows = [dict(zip(columns, row, strict=False)) for row in cur.fetchall()]

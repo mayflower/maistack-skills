@@ -35,7 +35,10 @@ def profile_database(include_schemas: list[str] | None = None) -> dict[str, Any]
     with psycopg.connect(dsn, autocommit=False) as conn:
         with conn.cursor() as cur:
             cur.execute("set transaction read only")
-            cur.execute("set local statement_timeout = %s", (30000,))
+            # PostgreSQL doesn't accept parameter placeholders inside SET; the
+            # value must be a literal. 30000ms is a hardcoded constant here,
+            # so f-string interpolation is safe.
+            cur.execute("set local statement_timeout = 30000")
             schemas = fetch_all(
                 cur,
                 """
