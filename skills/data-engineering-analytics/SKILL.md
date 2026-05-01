@@ -62,7 +62,7 @@ python scripts/dashboard_spec.py --title "Analysis" --question "$USER_QUESTION" 
 python scripts/validate_dashboard_spec.py /tmp/dashboard.json
 ```
 
-7. Call `data_engineering_show_dashboard` with the validated spec. The response should explain the answer, assumptions, warnings, and next useful drilldowns without exposing secrets.
+7. **Write the answer in the chat thread, then call `data_engineering_show_dashboard` with the validated spec.** The chat-thread message is the answer and must come *before* the tool call: 3–5 sentences covering the headline finding, the data behind it, key caveats, and the one or two follow-ups a curious reader would naturally ask. The dashboard is the supporting evidence, not the answer — the user reads the chat first and only opens the dashboard for verification or drill-down. Do not duplicate the entire narrative inside the dashboard's `textInsight` blocks; reserve those for inline call-outs that depend on a specific chart. Never expose secrets, raw DSNs, or credentials in either surface.
 
 ## Dashboard Strategy
 
