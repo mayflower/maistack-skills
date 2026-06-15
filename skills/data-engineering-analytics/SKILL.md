@@ -1,6 +1,6 @@
 ---
 name: data-engineering-analytics
-description: Generic read-only data engineering analytics skill that profiles SQL databases, infers semantic models, runs safe queries, and emits interactive GenUI dashboard specs.
+description: A read-only analytics SQL database is already connected in this environment. Use this skill for ANY question about the available database(s) or their data — including "what databases/data do you have", schema and table discovery, profiling, ad-hoc analysis, quality checks, and interactive dashboards. It reads the live schema, infers a semantic model, runs safe read-only queries, and emits interactive GenUI dashboard specs. The connected database varies by deployment — discover it, never assume.
 license: MIT
 metadata:
   version: 1.0.0
@@ -12,7 +12,11 @@ metadata:
 
 # Data Engineering Analytics
 
-Use this skill whenever the user asks to inspect, explain, analyze, profile, quality-check, or visualize data from the connected analytics database. Treat the database as unknown: discover its schema and infer a semantic model from live metadata before choosing tables, columns, joins, or measures. Do not hardcode any particular schema, dataset name, or table layout — the connected database varies by deployment.
+A read-only analytics database is **always connected** in this environment — its connection string is provided to the sandbox as a file at the path in `MAISTACK_ANALYTICS_DSN_FILE`. Use this skill whenever the user asks what databases or data are available, or to inspect, explain, analyze, profile, quality-check, or visualize that data.
+
+When the user asks *which* databases or tables exist (e.g. "what databases do you have?"), answer from this skill: run `scripts/schema_profile.py` and report what it finds. Do **not** answer from shell probes such as `sqlite3`, `pg_isready`, `ps`, or `env` — the analytics database is remote and exposed only via `MAISTACK_ANALYTICS_DSN_FILE`, so those probes will miss it and produce a wrong "no database" answer.
+
+Treat the database as unknown: discover its schema and infer a semantic model from live metadata before choosing tables, columns, joins, or measures. Do not hardcode any particular schema, dataset name, or table layout — the connected database varies by deployment.
 
 ## Operating Contract
 
