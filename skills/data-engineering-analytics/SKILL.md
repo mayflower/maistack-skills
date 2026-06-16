@@ -85,6 +85,13 @@ Use the references:
 
 The dashboard spec supports these block types: `metric`, `chart`, `table`, `textInsight`, `sql`, `dataQuality`, `relationshipMap`, `filterControl`.
 
+A `metric` block carries its headline figure **inline**: set `value` (the
+formatted KPI string or number) and optional `subtext` (a one-line breakdown).
+Do not point a metric at a `dataset` expecting the value to be derived — chart
+and table blocks consume datasets, metric blocks render the literal `value` you
+provide. A metric without `value` (or a single-row `dataset`+`valueField`)
+renders as "n/a".
+
 The dashboard spec supports these interactions: `crossFilter`, `drilldown`, `brush`, `highlight`, `compare`, `reset`.
 
 The frontend owns ECharts rendering and event handling. The skill declares intent, data, encodings, joins, assumptions, and warnings. It does not emit JavaScript.
