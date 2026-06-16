@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Run bounded read-only SQL against the analytics database."""
+
 from __future__ import annotations
 
 import argparse
@@ -12,10 +13,39 @@ from pathlib import Path
 from typing import Any
 
 BLOCKED_KEYWORDS = {
-    "alter", "analyze", "attach", "call", "checkpoint", "comment", "copy", "create", "delete", "detach",
-    "discard", "do", "drop", "execute", "grant", "insert", "listen", "load", "lock", "merge", "notify",
-    "prepare", "reassign", "refresh", "reindex", "reset", "revoke", "security", "set", "truncate", "unlisten",
-    "update", "vacuum",
+    "alter",
+    "analyze",
+    "attach",
+    "call",
+    "checkpoint",
+    "comment",
+    "copy",
+    "create",
+    "delete",
+    "detach",
+    "discard",
+    "do",
+    "drop",
+    "execute",
+    "grant",
+    "insert",
+    "listen",
+    "load",
+    "lock",
+    "merge",
+    "notify",
+    "prepare",
+    "reassign",
+    "refresh",
+    "reindex",
+    "reset",
+    "revoke",
+    "security",
+    "set",
+    "truncate",
+    "unlisten",
+    "update",
+    "vacuum",
 }
 COMMENT_RE = re.compile(r"(--[^\n]*|/\*.*?\*/)", re.S)
 
@@ -52,7 +82,9 @@ def assert_readonly_sql(sql: str) -> str:
     return statement
 
 
-def execute_readonly(sql: str, *, limit: int = 5000, timeout_ms: int = 30000) -> dict[str, Any]:
+def execute_readonly(
+    sql: str, *, limit: int = 5000, timeout_ms: int = 30000
+) -> dict[str, Any]:
     try:
         import psycopg
     except ImportError as exc:  # pragma: no cover - depends on sandbox image.
@@ -65,22 +97,38 @@ def execute_readonly(sql: str, *, limit: int = 5000, timeout_ms: int = 30000) ->
     # and the int() cast strips any non-integer input, so f-string
     # interpolation is safe here (no user-controlled fragment reaches SQL).
     timeout_ms = int(max(1000, min(timeout_ms, 300000)))
-    wrapped_sql = f"select * from ({statement}) as maistack_readonly_query limit %s"
+    # `limit` is a clamped int (see above), so inline it and call execute()
+    # with NO params. If a param tuple is passed, psycopg parses the whole
+    # wrapped query — including the user's statement — for '%s' placeholders,
+    # and a literal '%' in the user SQL (LIKE patterns, modulo, to_char masks)
+    # raises ProgrammingError ("only '%s','%b','%t' are allowed").
+    wrapped_sql = (
+        f"select * from ({statement}) as maistack_readonly_query limit {limit}"
+    )
     dsn = dsn_from_env_file()
-    with psycopg.connect(dsn, autocommit=False) as conn:
-        with conn.cursor() as cur:
-            cur.execute("set transaction read only")
-            cur.execute(f"set local statement_timeout = {timeout_ms}")
-            cur.execute(wrapped_sql, (limit,))
-            columns = [desc.name for desc in cur.description or []]
-            rows = [dict(zip(columns, row, strict=False)) for row in cur.fetchall()]
-            conn.rollback()
-    return {"columns": columns, "rows": rows, "rowCount": len(rows), "limit": limit, "truncated": len(rows) >= limit}
+    with psycopg.connect(dsn, autocommit=False) as conn, conn.cursor() as cur:
+        cur.execute("set transaction read only")
+        cur.execute(f"set local statement_timeout = {timeout_ms}")
+        cur.execute(wrapped_sql)
+        columns = [desc.name for desc in cur.description or []]
+        rows = [dict(zip(columns, row, strict=False)) for row in cur.fetchall()]
+        conn.rollback()
+    return {
+        "columns": columns,
+        "rows": rows,
+        "rowCount": len(rows),
+        "limit": limit,
+        "truncated": len(rows) >= limit,
+    }
 
 
-def write_output(result: dict[str, Any], output: Path | None, output_format: str) -> None:
+def write_output(
+    result: dict[str, Any], output: Path | None, output_format: str
+) -> None:
     if output_format == "csv":
-        handle = output.open("w", newline="", encoding="utf-8") if output else sys.stdout
+        handle = (
+            output.open("w", newline="", encoding="utf-8") if output else sys.stdout
+        )
         close = output is not None
         try:
             writer = csv.DictWriter(handle, fieldnames=result.get("columns", []))
@@ -107,11 +155,13 @@ def main() -> int:
     parser.add_argument("--format", choices=["json", "csv"], default="json")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
-    sql = args.sql if args.sql is not None else args.sql_file.read_text(encoding="utf-8")
+    sql = (
+        args.sql if args.sql is not None else args.sql_file.read_text(encoding="utf-8")
+    )
     try:
         result = execute_readonly(sql, limit=args.limit, timeout_ms=args.timeout_ms)
         write_output(result, args.output, args.format)
-    except Exception as exc:  # noqa: BLE001 - CLI should print validation error cleanly.
+    except Exception as exc:
         print(f"query failed: {exc}", file=sys.stderr)
         return 1
     return 0

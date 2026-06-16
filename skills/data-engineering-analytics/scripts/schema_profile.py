@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Profile schemas, tables, columns, constraints, indexes, and FK metadata."""
+
 from __future__ import annotations
 
 import argparse
@@ -44,13 +45,22 @@ def profile_database(include_schemas: list[str] | None = None) -> dict[str, Any]
                 """
                 select schema_name
                 from information_schema.schemata
-                where schema_name not like 'pg_%'
+                -- Use left()/<> rather than LIKE 'pg_%': psycopg parses '%' as
+                -- a placeholder marker, so a literal 'pg_%' raises
+                -- ProgrammingError ("only '%s','%b','%t' are allowed"). The
+                -- prefix check excludes pg_temp_*/pg_toast_temp_* (pg_catalog
+                -- and pg_toast are also covered by SYSTEM_SCHEMAS below).
+                where left(schema_name, 3) <> 'pg_'
                   and schema_name <> all(%s)
                 order by schema_name
                 """,
                 (list(SYSTEM_SCHEMAS),),
             )
-            schema_names = [row["schema_name"] for row in schemas if not include or row["schema_name"] in include]
+            schema_names = [
+                row["schema_name"]
+                for row in schemas
+                if not include or row["schema_name"] in include
+            ]
             tables = fetch_all(
                 cur,
                 """
