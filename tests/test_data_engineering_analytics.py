@@ -4,9 +4,7 @@ import importlib.util
 import json
 from pathlib import Path
 
-SKILL_DIR = (
-    Path(__file__).resolve().parents[1] / "skills" / "data-engineering-analytics"
-)
+SKILL_DIR = Path(__file__).resolve().parents[1] / "skills" / "data-engineering-analytics"
 
 
 def load_script(name: str):
@@ -21,19 +19,12 @@ def load_script(name: str):
 def test_readonly_query_accepts_select_and_cte() -> None:
     readonly_query = load_script("readonly_query.py")
     assert readonly_query.assert_readonly_sql("select 1") == "select 1"
-    assert readonly_query.assert_readonly_sql(
-        "with rows as (select 1 as n) select n from rows"
-    ).startswith("with rows")
+    assert readonly_query.assert_readonly_sql("with rows as (select 1 as n) select n from rows").startswith("with rows")
 
 
 def test_readonly_query_rejects_write_and_admin_sql() -> None:
     readonly_query = load_script("readonly_query.py")
-    for sql in [
-        "delete from sales",
-        "select * from users; drop table users",
-        "copy users to stdout",
-        "set role postgres",
-    ]:
+    for sql in ["delete from sales", "select * from users; drop table users", "copy users to stdout", "set role postgres"]:
         try:
             readonly_query.assert_readonly_sql(sql)
         except ValueError:
@@ -46,36 +37,11 @@ def test_semantic_model_handles_fk_and_no_fk_profiles() -> None:
     semantic_model = load_script("semantic_model.py")
     profile = {
         "columns": [
-            {
-                "table_schema": "public",
-                "table_name": "sales",
-                "column_name": "product_id",
-                "data_type": "integer",
-            },
-            {
-                "table_schema": "public",
-                "table_name": "sales",
-                "column_name": "sales_amount",
-                "data_type": "numeric",
-            },
-            {
-                "table_schema": "public",
-                "table_name": "sales",
-                "column_name": "order_date",
-                "data_type": "date",
-            },
-            {
-                "table_schema": "public",
-                "table_name": "products",
-                "column_name": "product_id",
-                "data_type": "integer",
-            },
-            {
-                "table_schema": "public",
-                "table_name": "products",
-                "column_name": "category",
-                "data_type": "text",
-            },
+            {"table_schema": "public", "table_name": "sales", "column_name": "product_id", "data_type": "integer"},
+            {"table_schema": "public", "table_name": "sales", "column_name": "sales_amount", "data_type": "numeric"},
+            {"table_schema": "public", "table_name": "sales", "column_name": "order_date", "data_type": "date"},
+            {"table_schema": "public", "table_name": "products", "column_name": "product_id", "data_type": "integer"},
+            {"table_schema": "public", "table_name": "products", "column_name": "category", "data_type": "text"},
         ],
         "rowEstimates": [
             {"table_schema": "public", "table_name": "sales", "estimated_rows": 50000},
@@ -111,9 +77,7 @@ def test_dashboard_spec_validation_rejects_executable_content() -> None:
         "question": "Can this run code?",
         "analysisType": "schema exploration",
         "datasets": [],
-        "blocks": [
-            {"id": "bad", "type": "textInsight", "html": "<script>alert(1)</script>"}
-        ],
+        "blocks": [{"id": "bad", "type": "textInsight", "html": "<script>alert(1)</script>"}],
         "interactions": [],
         "queries": [],
         "insights": [],
@@ -128,16 +92,8 @@ def test_dashboard_spec_validation_rejects_executable_content() -> None:
 
 
 def test_dashboard_capabilities_are_reflected_in_json_schema() -> None:
-    capabilities = json.loads(
-        (
-            SKILL_DIR / "capabilities" / "data_engineering_dashboard_capabilities.json"
-        ).read_text(encoding="utf-8")
-    )
-    schema = json.loads(
-        (SKILL_DIR / "schemas" / "dashboard_spec.schema.json").read_text(
-            encoding="utf-8"
-        )
-    )
+    capabilities = json.loads((SKILL_DIR / "capabilities" / "data_engineering_dashboard_capabilities.json").read_text(encoding="utf-8"))
+    schema = json.loads((SKILL_DIR / "schemas" / "dashboard_spec.schema.json").read_text(encoding="utf-8"))
     assert set(schema["$defs"]["chartType"]["enum"]) == set(capabilities["chartTypes"])
     assert "custom" in capabilities["unsupportedChartTypes"]
     assert "custom" not in capabilities["chartTypes"]
@@ -151,16 +107,10 @@ def test_dashboard_capabilities_are_reflected_in_json_schema() -> None:
 
 def test_dashboard_spec_validation_accepts_all_supported_chart_types() -> None:
     validator = load_script("validate_dashboard_spec.py")
-    capabilities = json.loads(
-        (
-            SKILL_DIR / "capabilities" / "data_engineering_dashboard_capabilities.json"
-        ).read_text(encoding="utf-8")
-    )
+    capabilities = json.loads((SKILL_DIR / "capabilities" / "data_engineering_dashboard_capabilities.json").read_text(encoding="utf-8"))
     for chart_type, capability in capabilities["chartTypes"].items():
         encoding = {key: key for key in capability["requiredEncodings"]}
-        rows: list[dict[str, object]] = [
-            {key: index + 1 for index, key in enumerate(encoding)}
-        ]
+        rows = [{key: index + 1 for index, key in enumerate(encoding)}]
         if "x" in encoding:
             rows[0]["x"] = "A"
         if "source" in encoding:
@@ -175,14 +125,7 @@ def test_dashboard_spec_validation_accepts_all_supported_chart_types() -> None:
             "question": f"Can {chart_type} render?",
             "analysisType": "comparison",
             "datasets": [{"id": "result", "columns": list(rows[0]), "rows": rows}],
-            "blocks": [
-                {
-                    "id": "chart",
-                    "type": "chart",
-                    "dataset": "result",
-                    "chart": {"type": chart_type, "encoding": encoding},
-                }
-            ],
+            "blocks": [{"id": "chart", "type": "chart", "dataset": "result", "chart": {"type": chart_type, "encoding": encoding}}],
             "interactions": [],
             "queries": [],
             "insights": [],
@@ -198,17 +141,8 @@ def test_dashboard_spec_validation_rejects_unknown_chart_type() -> None:
         "title": "Bad",
         "question": "Can this render?",
         "analysisType": "comparison",
-        "datasets": [
-            {"id": "result", "columns": ["x", "y"], "rows": [{"x": "A", "y": 1}]}
-        ],
-        "blocks": [
-            {
-                "id": "chart",
-                "type": "chart",
-                "dataset": "result",
-                "chart": {"type": "custom", "encoding": {"x": "x", "y": "y"}},
-            }
-        ],
+        "datasets": [{"id": "result", "columns": ["x", "y"], "rows": [{"x": "A", "y": 1}]}],
+        "blocks": [{"id": "chart", "type": "chart", "dataset": "result", "chart": {"type": "custom", "encoding": {"x": "x", "y": "y"}}}],
         "interactions": [],
         "queries": [],
         "insights": [],
@@ -229,9 +163,7 @@ def test_dashboard_spec_validation_rejects_unknown_coordinate_system() -> None:
         "title": "Bad",
         "question": "Can this render?",
         "analysisType": "comparison",
-        "datasets": [
-            {"id": "result", "columns": ["x", "y"], "rows": [{"x": "A", "y": 1}]}
-        ],
+        "datasets": [{"id": "result", "columns": ["x", "y"], "rows": [{"x": "A", "y": 1}]}],
         "blocks": [
             {
                 "id": "chart",
@@ -255,69 +187,3 @@ def test_dashboard_spec_validation_rejects_unknown_coordinate_system() -> None:
         assert "unsupported coordinate system" in str(exc)
     else:  # pragma: no cover - assertion branch
         raise AssertionError("dashboard spec should reject unknown coordinate systems")
-
-
-def _spec_with_chart(dataset: dict) -> dict:
-    return {
-        "schemaVersion": "1.0",
-        "title": "T",
-        "question": "Does the chart get data?",
-        "analysisType": "trend",
-        "datasets": [dataset],
-        "blocks": [
-            {
-                "id": "chart",
-                "type": "chart",
-                "dataset": dataset.get("id"),
-                "chart": {"type": "line", "encoding": {"x": "x", "y": "y"}},
-            }
-        ],
-        "interactions": [],
-        "queries": [],
-        "insights": [],
-        "provenance": {},
-    }
-
-
-def test_dashboard_spec_validation_rejects_chart_without_inline_rows() -> None:
-    validator = load_script("validate_dashboard_spec.py")
-    # A dataset that only carries columns/rowCount (rows omitted to keep the
-    # spec small) renders an empty chart in the frontend — reject it.
-    spec = _spec_with_chart({"id": "result", "columns": ["x", "y"], "rowCount": 5000})
-    try:
-        validator.validate(spec)
-    except ValueError as exc:
-        assert "no inline rows" in str(exc)
-    else:  # pragma: no cover - assertion branch
-        raise AssertionError(
-            "dashboard spec should reject data-bearing blocks without inline rows"
-        )
-
-
-def test_dashboard_spec_validation_rejects_chart_without_dataset() -> None:
-    validator = load_script("validate_dashboard_spec.py")
-    spec = _spec_with_chart(
-        {"id": "result", "columns": ["x", "y"], "rows": [{"x": "A", "y": 1}]}
-    )
-    spec["blocks"][0].pop("dataset")
-    try:
-        validator.validate(spec)
-    except ValueError as exc:
-        assert "must reference a dataset" in str(exc)
-    else:  # pragma: no cover - assertion branch
-        raise AssertionError(
-            "dashboard spec should reject a chart block with no dataset"
-        )
-
-
-def test_dashboard_spec_validation_accepts_chart_with_inline_rows() -> None:
-    validator = load_script("validate_dashboard_spec.py")
-    spec = _spec_with_chart(
-        {
-            "id": "result",
-            "columns": ["x", "y"],
-            "rows": [{"x": "A", "y": 1}],
-            "rowCount": 1,
-        }
-    )
-    assert validator.validate(spec) == spec

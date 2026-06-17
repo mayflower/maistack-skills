@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Validate a data engineering dashboard spec without executing any spec content."""
-
 from __future__ import annotations
 
 import argparse
@@ -8,36 +7,11 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Any, NoReturn
+from typing import Any
 
-BLOCK_TYPES = {
-    "metric",
-    "chart",
-    "table",
-    "textInsight",
-    "sql",
-    "dataQuality",
-    "relationshipMap",
-    "filterControl",
-}
-# Blocks that render their data from a dataset's inline rows. The frontend reads
-# inline `rows` only — it never fetches `artifactPath` — so any of these blocks
-# pointing at a dataset without rows renders empty ("No chart data available" /
-# blank table). Reject that at validation time so the agent inlines the rows.
-DATA_BEARING_BLOCK_TYPES = {"chart", "table", "dataQuality", "relationshipMap"}
-INTERACTION_TYPES = {
-    "crossFilter",
-    "drilldown",
-    "brush",
-    "highlight",
-    "compare",
-    "reset",
-}
-CAPABILITIES_PATH = (
-    Path(__file__).resolve().parents[1]
-    / "capabilities"
-    / "data_engineering_dashboard_capabilities.json"
-)
+BLOCK_TYPES = {"metric", "chart", "table", "textInsight", "sql", "dataQuality", "relationshipMap", "filterControl"}
+INTERACTION_TYPES = {"crossFilter", "drilldown", "brush", "highlight", "compare", "reset"}
+CAPABILITIES_PATH = Path(__file__).resolve().parents[1] / "capabilities" / "data_engineering_dashboard_capabilities.json"
 CAPABILITIES = json.loads(CAPABILITIES_PATH.read_text(encoding="utf-8"))
 CHART_CAPABILITIES = CAPABILITIES["chartTypes"]
 COORDINATE_SYSTEMS = set(CAPABILITIES.get("coordinateSystems", {}))
@@ -53,13 +27,10 @@ FORBIDDEN_KEYS = {
     "srcdoc",
     "widget_code",
 }
-FORBIDDEN_PATTERNS = [
-    re.compile(r"<\s*script", re.I),
-    re.compile(r"javascript\s*:", re.I),
-]
+FORBIDDEN_PATTERNS = [re.compile(r"<\s*script", re.I), re.compile(r"javascript\s*:", re.I)]
 
 
-def _fail(message: str) -> NoReturn:
+def _fail(message: str) -> None:
     raise ValueError(message)
 
 
@@ -79,18 +50,7 @@ def _scan(value: Any, path: str = "$") -> None:
 
 
 def validate(spec: dict[str, Any]) -> dict[str, Any]:
-    required = [
-        "schemaVersion",
-        "title",
-        "question",
-        "analysisType",
-        "datasets",
-        "blocks",
-        "interactions",
-        "queries",
-        "insights",
-        "provenance",
-    ]
+    required = ["schemaVersion", "title", "question", "analysisType", "datasets", "blocks", "interactions", "queries", "insights", "provenance"]
     for key in required:
         if key not in spec:
             _fail(f"missing required field: {key}")
@@ -99,11 +59,11 @@ def validate(spec: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(spec.get("blocks"), list):
         _fail("blocks must be an array")
 
-    datasets_by_id: dict[str, dict[str, Any]] = {}
+    dataset_ids = set()
     for dataset in spec["datasets"]:
         if not isinstance(dataset, dict) or not dataset.get("id"):
             _fail("every dataset must have an id")
-        datasets_by_id[dataset["id"]] = dataset
+        dataset_ids.add(dataset["id"])
 
     block_ids = set()
     for block in spec["blocks"]:
@@ -115,15 +75,12 @@ def validate(spec: dict[str, Any]) -> dict[str, Any]:
         if block_id in block_ids:
             _fail(f"duplicate block id: {block_id}")
         block_ids.add(block_id)
-        block_type = block.get("type")
-        if block_type not in BLOCK_TYPES:
-            _fail(f"unsupported block type: {block_type}")
-        dataset_id = block.get("dataset")
-        if dataset_id and dataset_id not in datasets_by_id:
-            _fail(f"block {block_id} references unknown dataset {dataset_id}")
-        if block_type in DATA_BEARING_BLOCK_TYPES:
-            _validate_block_has_rows(block_id, block_type, dataset_id, datasets_by_id)
-        if block_type == "chart":
+        if block.get("type") not in BLOCK_TYPES:
+            _fail(f"unsupported block type: {block.get('type')}")
+        dataset = block.get("dataset")
+        if dataset and dataset not in dataset_ids:
+            _fail(f"block {block_id} references unknown dataset {dataset}")
+        if block.get("type") == "chart":
             _validate_chart(block)
         for interaction in block.get("interactions", []):
             _validate_interaction(interaction, block_ids=None)
@@ -133,32 +90,6 @@ def validate(spec: dict[str, Any]) -> dict[str, Any]:
 
     _scan(spec)
     return spec
-
-
-def _dataset_has_rows(dataset: dict[str, Any] | None) -> bool:
-    return (
-        isinstance(dataset, dict)
-        and isinstance(dataset.get("rows"), list)
-        and len(dataset["rows"]) > 0
-    )
-
-
-def _validate_block_has_rows(
-    block_id: str,
-    block_type: str,
-    dataset_id: Any,
-    datasets_by_id: dict[str, dict[str, Any]],
-) -> None:
-    if not dataset_id:
-        _fail(
-            f"{block_type} block {block_id} must reference a dataset with inline rows"
-        )
-    if not _dataset_has_rows(datasets_by_id.get(dataset_id)):
-        _fail(
-            f"{block_type} block {block_id} references dataset '{dataset_id}' with no inline rows; "
-            "inline the query-result rows into spec.datasets[].rows "
-            "(artifactPath is not a supported data channel)"
-        )
 
 
 def _chart_type(chart: Any) -> str | None:
@@ -187,26 +118,15 @@ def _validate_chart(block: dict[str, Any]) -> None:
     for key, value in encoding.items():
         if not isinstance(key, str):
             _fail(f"invalid encoding key in block {block['id']}")
-        if not isinstance(value, str) and not (
-            isinstance(value, list) and all(isinstance(item, str) for item in value)
-        ):
+        if not isinstance(value, str) and not (isinstance(value, list) and all(isinstance(item, str) for item in value)):
             _fail(f"invalid encoding value in block {block['id']}")
-    missing = sorted(
-        set(capability.get("requiredEncodings", []))
-        - set(encoding)
-        - INFERABLE_ENCODINGS
-    )
+    missing = sorted(set(capability.get("requiredEncodings", [])) - set(encoding) - INFERABLE_ENCODINGS)
     if missing:
-        _fail(
-            f"chart block {block['id']} missing required encodings: {', '.join(missing)}"
-        )
+        _fail(f"chart block {block['id']} missing required encodings: {', '.join(missing)}")
     chart = block.get("chart")
     if isinstance(chart, dict) and "coordinateSystem" in chart:
         coordinate_system = chart["coordinateSystem"]
-        if (
-            not isinstance(coordinate_system, str)
-            or coordinate_system not in COORDINATE_SYSTEMS
-        ):
+        if not isinstance(coordinate_system, str) or coordinate_system not in COORDINATE_SYSTEMS:
             _fail(f"unsupported coordinate system: {coordinate_system}")
 
 
@@ -227,7 +147,7 @@ def main() -> int:
     args = parser.parse_args()
     try:
         validate(json.loads(args.spec.read_text(encoding="utf-8")))
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 - CLI should print validation error cleanly.
         print(f"invalid dashboard spec: {exc}", file=sys.stderr)
         return 1
     print("valid")

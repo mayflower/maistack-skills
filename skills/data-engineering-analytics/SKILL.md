@@ -92,16 +92,6 @@ and table blocks consume datasets, metric blocks render the literal `value` you
 provide. A metric without `value` (or a single-row `dataset`+`valueField`)
 renders as "n/a".
 
-`chart`, `table`, `dataQuality`, and `relationshipMap` blocks render from a
-dataset's **inline `rows`**. Each such block must set `dataset` to the id of a
-`spec.datasets[]` entry whose object carries the actual query-result `rows` —
-not just `columns`/`rowCount`. The renderer reads inline `rows` only; it does
-**not** fetch `artifactPath`, so a dataset that omits its rows makes the chart
-render "No chart data available" and the table render empty. Do not drop rows to
-keep the spec small — inline them. `scripts/validate_dashboard_spec.py` rejects
-any data-bearing block whose dataset has no inline rows, so run it before
-calling `data_engineering_show_dashboard`.
-
 The dashboard spec supports these interactions: `crossFilter`, `drilldown`, `brush`, `highlight`, `compare`, `reset`.
 
 The frontend owns ECharts rendering and event handling. The skill declares intent, data, encodings, joins, assumptions, and warnings. It does not emit JavaScript.
