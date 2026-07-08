@@ -193,8 +193,7 @@ cp -r app-store-optimization ~/.claude/skills/
 
 ### For Claude Apps (Browser)
 
-1. Use the `skill-creator` skill to import the skill
-2. Or manually import via Claude Apps interface
+Import the skill manually via the Claude Apps interface.
 
 ### Verification
 
