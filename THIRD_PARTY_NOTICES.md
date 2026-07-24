@@ -441,3 +441,22 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+## **MIT License — Klotzkette German Legal Skills**
+
+The following adapted skills are licensed under the MIT License reproduced
+in each skill's `LICENSE.txt`:
+
+- `agb-recht-pruefer`
+- `datenschutzrecht`
+- `internal-investigations-praxis`
+- `ki-governance`
+- `nis2-cybersecurity-compliance`
+
+**claude-fuer-deutsches-recht**, Copyright (c) 2026 Klotzkette
+
+Source Code: [https://github.com/Klotzkette/claude-fuer-deutsches-recht](https://github.com/Klotzkette/claude-fuer-deutsches-recht)
+
+Imported from commit `4234ea41605938ac6a11746f9aa8e7ad4a12f9c6`.
